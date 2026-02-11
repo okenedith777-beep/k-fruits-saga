@@ -254,4 +254,217 @@
   <div class="move-fruit">🍓</div>
   <div class="move-fruit">🍓</div>
   <div class="move-fruit">🍓</div>
-  <div class="move-fruit">🍓</
+  <div class="move-fruit">🍓</div>
+  <div class="move-fruit">🍓</div>
+  <div class="move-fruit">🍓</div>
+</div>
+
+<div id="board">
+  <!-- Se generará con JavaScript -->
+</div>
+
+<div id="tools">
+  <div class="tool" title="Semillas (3 unidades)">
+    🎒<span class="count">3</span>
+  </div>
+  <div class="tool" title="Imán (recolecta 5 frutas secundarias)">
+    🧲<span class="count">0/5</span>
+  </div>
+  <div class="tool" title="Rotación">
+    ↻
+  </div>
+</div>
+
+<div id="level-info">
+  Nivel 1 | Mundo: RAÍZ | Tablero: 8×8
+</div>
+
+<script>
+// === CONFIGURACIÓN ===
+const FRUITS = ['🍎', '🍓', '🍌', '🥝', '🍇', '🥑', '🥭', '🍍'];
+let score = 0;
+let target = 20;
+let movesLeft = 15;
+let boardSize = { rows: 8, cols: 8 };
+let board = [];
+let selectedCell = null;
+let isAnimating = false;
+
+// === INICIALIZAR JUEGO ===
+function initGame() {
+  updateScoreDisplay(score);  document.getElementById('objective-text').textContent = `Objetivo: ${target}`;
+  document.getElementById('level-info').textContent = 
+    `Nivel 1 | Mundo: RAÍZ | Tablero: ${boardSize.rows}×${boardSize.cols}`;
+
+  const boardEl = document.getElementById('board');
+  boardEl.innerHTML = '';
+  board = [];
+
+  // Generar tablero simple (sin verificación compleja)
+  for (let r = 0; r < boardSize.rows; r++) {
+    board[r] = [];
+    for (let c = 0; c < boardSize.cols; c++) {
+      const fruit = FRUITS[Math.floor(Math.random() * FRUITS.length)];
+      board[r][c] = fruit;
+
+      const cell = document.createElement('div');
+      cell.className = 'cell';
+      cell.textContent = fruit;
+      cell.dataset.row = r;
+      cell.dataset.col = c;
+      cell.addEventListener('touchstart', handleTouchStart);
+      cell.addEventListener('mousedown', handleTouchStart);
+      boardEl.appendChild(cell);
+    }
+  }
+}
+
+// === TOQUE ===
+function handleTouchStart(e) {
+  if (isAnimating) return;
+  e.preventDefault();
+  const cell = e.target;
+  if (!cell.classList.contains('cell')) return;
+  const r = parseInt(cell.dataset.row);
+  const c = parseInt(cell.dataset.col);
+  selectedCell = { r, c };
+  cell.classList.add('matching');
+  setTimeout(() => cell.classList.remove('matching'), 300);
+}
+
+// === SIMULAR COMBO AL TOCAR ===
+document.getElementById('board').addEventListener('click', function(e) {
+  if (isAnimating || !selectedCell) return;
+  const cell = e.target;
+  if (!cell.classList.contains('cell')) return;
+  simulateCombo(selectedCell.r, selectedCell.c);
+});
+
+function simulateCombo(row, col) {
+  isAnimating = true;  const boardEl = document.getElementById('board');
+  const cellsToClear = [];
+  const fruit = board[row][col];
+  let count = 1;
+
+  // Horizontal
+  for (let c = col-1; c >= 0 && board[row][c] === fruit; c--) count++;
+  for (let c = col+1; c < boardSize.cols && board[row][c] === fruit; c++) count++;
+  if (count >= 3) {
+    const start = col - Math.floor((count-1)/2);
+    for (let i = 0; i < count; i++) {
+      const c = start + i;
+      if (c >= 0 && c < boardSize.cols) cellsToClear.push({r: row, c});
+    }
+  }
+
+  // Vertical
+  if (cellsToClear.length < 3) {
+    count = 1;
+    for (let r = row-1; r >= 0 && board[r][col] === fruit; r--) count++;
+    for (let r = row+1; r < boardSize.rows && board[r][col] === fruit; r++) count++;
+    if (count >= 3) {
+      const start = row - Math.floor((count-1)/2);
+      for (let i = 0; i < count; i++) {
+        const r = start + i;
+        if (r >= 0 && r < boardSize.rows) cellsToClear.push({r, c: col});
+      }
+    }
+  }
+
+  if (cellsToClear.length >= 3) {
+    // Animación
+    cellsToClear.forEach(pos => {
+      const idx = pos.r * boardSize.cols + pos.c;
+      const cell = boardEl.children[idx];
+      cell.classList.add('matching');
+      setTimeout(() => {
+        cell.textContent = '';
+        cell.style.background = 'rgba(20,10,40,0.6)';
+      }, 200);
+    });
+
+    // Puntos
+    const pts = cellsToClear.length === 3 ? 3 : cellsToClear.length === 4 ? 5 : 8;
+    score += pts;
+    updateScoreDisplay(score);
+
+    // Objetivo (si es fresa)
+    if (fruit === '🍓') {
+      target -= cellsToClear.length;      if (target < 0) target = 0;
+      document.getElementById('objective-text').textContent = `Objetivo: ${target}`;
+    }
+
+    // Consumir 1 movimiento
+    useMove();
+
+    // Caída
+    setTimeout(() => {
+      dropFruits();
+      isAnimating = false;
+    }, 500);
+  }
+}
+
+// === ACTUALIZAR PUNTUACIÓN ===
+function updateScoreDisplay(s) {
+  const digits = document.querySelectorAll('.digit');
+  const str = String(s).padStart(4, '0');
+  digits.forEach((d, i) => {
+    d.textContent = str[i];
+  });
+}
+
+// === USAR MOVIMIENTO ===
+function useMove() {
+  if (movesLeft <= 0) return;
+  const moveIcons = document.querySelectorAll('.move-fruit');
+  const visible = Array.from(moveIcons).filter(el => !el.classList.contains('hidden'));
+  if (visible.length > 0) {
+    const last = visible[visible.length - 1];
+    last.classList.add('hidden');
+    movesLeft--;
+  }
+  if (movesLeft === 0) {
+    alert('¡Movimientos agotados!');
+  }
+}
+
+// === CAÍDA ===
+function dropFruits() {
+  const boardEl = document.getElementById('board');
+  for (let c = 0; c < boardSize.cols; c++) {
+    let empty = [];
+    for (let r = boardSize.rows - 1; r >= 0; r--) {
+      const idx = r * boardSize.cols + c;
+      const cell = boardEl.children[idx];
+      if (cell.textContent === '') empty.push(r);
+      else if (empty.length > 0) {
+        const last = empty.pop();        const fruit = cell.textContent;
+        cell.textContent = '';
+        boardEl.children[last * boardSize.cols + c].textContent = fruit;
+        boardEl.children[last * boardSize.cols + c].classList.add('matching');
+        setTimeout(() => {
+          boardEl.children[last * boardSize.cols + c].classList.remove('matching');
+        }, 300);
+      }
+    }
+    for (let i = 0; i < empty.length; i++) {
+      const r = empty[i];
+      const fruit = FRUITS[Math.floor(Math.random() * FRUITS.length)];
+      boardEl.children[r * boardSize.cols + c].textContent = fruit;
+      boardEl.children[r * boardSize.cols + c].classList.add('matching');
+      setTimeout(() => {
+        boardEl.children[r * boardSize.cols + c].classList.remove('matching');
+      }, 300);
+    }
+  }
+}
+
+// === INICIAR ===
+window.addEventListener('load', () => {
+  setTimeout(initGame, 300);
+});
+</script>
+
+</body>
+</html>
