@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+      <!DOCTYPE html>
 <html lang="es">
 <head>
   <meta charset="UTF-8">
@@ -136,6 +136,206 @@
   </div>
 </div>
 
-<script src="game.js"></script>
+<script>
+// === CONFIGURACIÓN ===
+const FRUITS = ['🍎', '🍓', '🍌', '🥝', '🍇', '🥑', '🥭', '🍍'];
+let score = 0;
+let target = 20;
+let movesLeft = 15;
+let boardSize = { rows: 5, cols: 5 };
+let board = [];
+let selectedCell = null;
+let isAnimating = false;
+// === INICIALIZAR JUEGO ===
+function initGame() {
+  document.getElementById('score').textContent = '0000';
+  document.getElementById('target').textContent = target;
+  document.getElementById('level-select').textContent = 
+    `Nivel 1 | Mundo: RAÍZ | Tablero: ${boardSize.rows}×${boardSize.cols}`;
+
+  const boardEl = document.getElementById('board');
+  boardEl.innerHTML = '';
+
+  // Generar tablero SIN combinaciones iniciales
+  board = [];
+  for (let r = 0; r < boardSize.rows; r++) {
+    board[r] = [];
+    for (let c = 0; c < boardSize.cols; c++) {
+      let fruit;
+      do {
+        fruit = FRUITS[Math.floor(Math.random() * FRUITS.length)];
+      } while (createsInitialCombo(r, c, fruit));
+      board[r][c] = fruit;
+      
+      const cell = document.createElement('div');
+      cell.className = 'cell';
+      cell.textContent = fruit;
+      cell.dataset.row = r;
+      cell.dataset.col = c;
+      cell.addEventListener('touchstart', handleTouchStart);
+      cell.addEventListener('mousedown', handleTouchStart);
+      boardEl.appendChild(cell);
+    }
+  }
+
+  // 15 toques
+  const movesEl = document.getElementById('moves');
+  movesEl.innerHTML = '';
+  for (let i = 0; i < movesLeft; i++) {
+    const fruit = document.createElement('div');
+    fruit.className = 'move-fruit';
+    fruit.style.background = '#ffcc00';
+    movesEl.appendChild(fruit);
+  }
+}
+
+// === VERIFICAR COMBO INICIAL ===
+function createsInitialCombo(row, col, fruit) {
+  if (col >= 2 && board[row][col-1] === fruit && board[row][col-2] === fruit) return true;
+  if (col >= 1 && col < boardSize.cols-1 && board[row][col-1] === fruit && board[row][col+1] === fruit) return true;
+  if (col < boardSize.cols-2 && board[row][col+1] === fruit && board[row][col+2] === fruit) return true;
+  if (row >= 2 && board[row-1][col] === fruit && board[row-2][col] === fruit) return true;  if (row >= 1 && row < boardSize.rows-1 && board[row-1][col] === fruit && board[row+1][col] === fruit) return true;
+  if (row < boardSize.rows-2 && board[row+1][col] === fruit && board[row+2][col] === fruit) return true;
+  return false;
+}
+
+// === TOQUE ===
+function handleTouchStart(e) {
+  if (isAnimating) return;
+  e.preventDefault();
+  const cell = e.target;
+  if (!cell.classList.contains('cell')) return;
+  const r = parseInt(cell.dataset.row);
+  const c = parseInt(cell.dataset.col);
+  selectedCell = { r, c };
+  cell.classList.add('pulse-effect');
+  setTimeout(() => cell.classList.remove('pulse-effect'), 300);
+}
+
+// === SIMULAR COMBO ===
+document.getElementById('board').addEventListener('click', function(e) {
+  if (isAnimating || !selectedCell) return;
+  const cell = e.target;
+  if (!cell.classList.contains('cell')) return;
+  simulateCombo(selectedCell.r, selectedCell.c);
+});
+
+function simulateCombo(row, col) {
+  isAnimating = true;
+  const boardEl = document.getElementById('board');
+  const cellsToClear = [];
+  const fruit = board[row][col];
+  let count = 1;
+
+  // Horizontal
+  for (let c = col-1; c >= 0 && board[row][c] === fruit; c--) count++;
+  for (let c = col+1; c < boardSize.cols && board[row][c] === fruit; c++) count++;
+  if (count >= 3) {
+    const start = col - Math.floor((count-1)/2);
+    for (let i = 0; i < count; i++) {
+      const c = start + i;
+      if (c >= 0 && c < boardSize.cols) cellsToClear.push({r: row, c});
+    }
+  }
+
+  // Vertical
+  if (cellsToClear.length < 3) {
+    count = 1;
+    for (let r = row-1; r >= 0 && board[r][col] === fruit; r--) count++;
+    for (let r = row+1; r < boardSize.rows && board[r][col] === fruit; r++) count++;
+    if (count >= 3) {      const start = row - Math.floor((count-1)/2);
+      for (let i = 0; i < count; i++) {
+        const r = start + i;
+        if (r >= 0 && r < boardSize.rows) cellsToClear.push({r, c: col});
+      }
+    }
+  }
+
+  if (cellsToClear.length >= 3) {
+    cellsToClear.forEach(pos => {
+      const idx = pos.r * boardSize.cols + pos.c;
+      const cell = boardEl.children[idx];
+      cell.classList.add('combo-effect');
+      setTimeout(() => {
+        cell.textContent = '';
+        cell.style.background = 'rgba(20,20,40,0.5)';
+      }, 200);
+    });
+
+    const pts = cellsToClear.length === 3 ? 3 : cellsToClear.length === 4 ? 5 : 8;
+    score += pts;
+    document.getElementById('score').textContent = String(score).padStart(4, '0');
+
+    if (fruit === '🍌') {
+      target -= cellsToClear.length;
+      if (target < 0) target = 0;
+      document.getElementById('target').textContent = target;
+    }
+
+    setTimeout(() => {
+      dropFruits();
+      isAnimating = false;
+    }, 500);
+  }
+}
+
+// === CAÍDA ===
+function dropFruits() {
+  const boardEl = document.getElementById('board');
+  for (let c = 0; c < boardSize.cols; c++) {
+    let empty = [];
+    for (let r = boardSize.rows - 1; r >= 0; r--) {
+      const idx = r * boardSize.cols + c;
+      const cell = boardEl.children[idx];
+      if (cell.textContent === '') empty.push(r);
+      else if (empty.length > 0) {
+        const last = empty.pop();
+        const fruit = cell.textContent;
+        cell.textContent = '';
+        boardEl.children[last * boardSize.cols + c].textContent = fruit;        boardEl.children[last * boardSize.cols + c].classList.add('combo-effect');
+        setTimeout(() => {
+          boardEl.children[last * boardSize.cols + c].classList.remove('combo-effect');
+        }, 300);
+      }
+    }
+    for (let i = 0; i < empty.length; i++) {
+      const r = empty[i];
+      const fruit = FRUITS[Math.floor(Math.random() * FRUITS.length)];
+      boardEl.children[r * boardSize.cols + c].textContent = fruit;
+      boardEl.children[r * boardSize.cols + c].classList.add('combo-effect');
+      setTimeout(() => {
+        boardEl.children[r * boardSize.cols + c].classList.remove('combo-effect');
+      }, 300);
+    }
+  }
+}
+
+// === CARGA ===
+window.addEventListener('load', () => {
+  let p = 0;
+  const bar = document.getElementById('progress');
+  const loader = document.getElementById('loader');
+  const game = document.getElementById('game');
+
+  const interval = setInterval(() => {
+    p += 1.2;
+    bar.style.width = Math.min(p, 100) + '%';
+    if (p >= 100) {
+      clearInterval(interval);
+      setTimeout(() => {
+        loader.style.display = 'none';
+        game.style.display = 'block';
+        initGame();
+      }, 400);
+    }
+  }, 35);
+
+  document.body.addEventListener('touchstart', () => {
+    const a = document.getElementById('ambience');
+    a.volume = 0.15;
+    a.play().catch(() => {});
+  }, { once: true });
+});
+</script>
 </body>
-  </html>
+</html>
