@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>K-FRUITS SAGA</title>
+  <style>
+    body {
+      margin: 0;
+      background: url('https://i.imgur.com/8ZkLQ9r.jpg') center/cover fixed;
+      color: #e0e0ff;
+      font-family: 'Segoe UI', sans-serif;
+      overflow-x: hidden;
+      height: 100vh;
+    }
+    #loader {
+      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(0,0,0,0.95); display: flex; flex-direction: column;
+      justify-content: center; align-items: center; z-index: 999;
+    }
+    #loader h1 {
+      color: #ffcc00; font-size: 32px; margin-bottom: 20px;
+      text-shadow: 0 0 15px rgba(255,204,0,0.9);
+      letter-spacing: 2px;
+    }
+    #progress-bar {
+      width: 240px; height: 12px; background: #0d0d20;
+      border-radius: 6px; overflow: hidden;
+      box-shadow: 0 0 12px rgba(255,204,0,0.4);
+    }
+    #progress {
+      height: 100%; width: 0%; background: linear-gradient(90deg, #ffcc00, #ff9900);
+      transition: width 0.5s ease;
+    }
+    #game {
+      display: none; padding: 12px;
+      height: calc(100vh - 60px);
+      overflow-y: auto;
+    }
+    #header {
+      display: flex; justify-content: space-between;
+      margin-bottom: 15px; font-size: 20px;
+      background: rgba(0,0,0,0.6); padding: 12px;
+      border-radius: 12px;
+      backdrop-filter: blur(4px);
+    }
+    #score { color: #ffcc00; font-weight: bold; }
+    #target { color: #4dffcc; font-weight: bold; }
+    #moves {
+      display: flex; gap: 6px; margin: 15px 0;      justify-content: center;
+    }
+    .move-fruit {
+      width: 24px; height: 24px; background: #ffcc00;
+      border-radius: 50%; box-shadow: 0 0 8px rgba(255,204,0,0.7);
+    }
+    #board {
+      display: grid; grid-template-columns: repeat(5, 1fr);
+      gap: 6px; margin: 15px 0;
+    }
+    .cell {
+      aspect-ratio: 1; background: rgba(10,10,20,0.7);
+      border-radius: 12px; display: flex;
+      justify-content: center; align-items: center;
+      font-size: 26px;
+      backdrop-filter: blur(2px);
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .cell:hover {
+      transform: scale(1.05);
+      box-shadow: 0 0 10px rgba(100,200,255,0.5);
+    }
+    #tools {
+      display: flex; justify-content: space-around;
+      margin-top: 20px;
+    }
+    .tool {
+      width: 50px; height: 50px; background: rgba(40,40,60,0.85);
+      border-radius: 50%; display: flex;
+      justify-content: center; align-items: center;
+      color: white; font-weight: bold;
+      font-size: 24px;
+      box-shadow: 0 0 12px rgba(100,200,255,0.3);
+      transition: all 0.3s;
+    }
+    .tool:active {
+      transform: scale(0.9);
+      box-shadow: 0 0 15px rgba(255,204,0,0.6);
+    }
+    #level-select {
+      text-align: center; margin-top: 25px;
+      color: #aaa; font-size: 16px;
+      text-shadow: 0 0 5px rgba(0,0,0,0.5);
+    }
+    .combo-effect {
+      animation: pulse 0.4s;
+    }
+    @keyframes pulse {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.1); }      100% { transform: scale(1); }
+    }
+  </style>
+</head>
+<body>
+
+<audio id="ambience" loop>
+  <source src="https://www.soundjay.com/nature/sounds/wind-blowing-soft-01.mp3" type="audio/mpeg">
+</audio>
+
+<div id="loader">
+  <h1>K-FRUITS SAGA</h1>
+  <div id="progress-bar"><div id="progress"></div></div>
+</div>
+
+<div id="game">
+  <div id="header">
+    <div>Puntos: <span id="score">0000</span></div>
+    <div>Objetivo: <span id="target">20</span></div>
+  </div>
+
+  <div id="moves">
+    <!-- 15 toques -->
+  </div>
+
+  <div id="board">
+    <!-- Tablero se genera con JS -->
+  </div>
+
+  <div id="tools">
+    <div class="tool">🌱</div>
+    <div class="tool">🍓</div>
+    <div class="tool">🔄</div>
+  </div>
+
+  <div id="level-select">
+    Nivel 1 | Mundo: RAÍZ | Tablero: 5×5
+  </div>
+</div>
+
+<script src="game.js"></script>
+</body>
+  </html>
