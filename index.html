@@ -684,8 +684,13 @@ function useMove() {
   }
 }
 
-// === INICIAR ===window.addEventListener('load', () => {
-  setTimeout(initGame, 300);
+// === INICIAR ===document.addEventListener('DOMContentLoaded', function() {
+  try {
+    initGame();
+  } catch (e) {
+    console.error('Error al iniciar:', e);
+    alert('Error: ' + e.message + '. Recarga la página.');
+  }
 });
 </script>
 
