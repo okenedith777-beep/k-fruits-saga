@@ -144,11 +144,8 @@
       animation: pulse 0.4s;
       z-index: 2;
     }
-    .cell.target {
-      box-shadow: 0 0 15px var(--gold), inset 0 0 0 2px rgba(255,255,255,0.5);    }
     @keyframes pulse {
-      0% { transform: scale(1); box-shadow: 0 4px 8px rgba(255,204,0,0.6); }
-      50% { transform: scale(1.15); box-shadow: 0 0 20px var(--gold); }
+      0% { transform: scale(1); box-shadow: 0 4px 8px rgba(255,204,0,0.6); }      50% { transform: scale(1.15); box-shadow: 0 0 20px var(--gold); }
       100% { transform: scale(1); box-shadow: 0 4px 8px rgba(255,204,0,0.6); }
     }
 
@@ -194,10 +191,10 @@
       display: flex;
       justify-content: center;
       align-items: center;
-      font-size: 28px;      box-shadow: 0 0 14px rgba(100,200,255,0.4);
+      font-size: 28px;
+      box-shadow: 0 0 14px rgba(100,200,255,0.4);
       transition: all 0.3s;
-      position: relative;
-    }
+      position: relative;    }
     .tool:active {
       transform: scale(0.88);
       box-shadow: 0 0 25px var(--gold);
@@ -243,10 +240,10 @@
     <span id="objective-text">Objetivo: 20</span>
   </div>
 </div>
+
 <div id="moves-row">
   <div class="move-fruit">🍓</div>
-  <div class="move-fruit">🍓</div>
-  <div class="move-fruit">🍓</div>
+  <div class="move-fruit">🍓</div>  <div class="move-fruit">🍓</div>
   <div class="move-fruit">🍓</div>
   <div class="move-fruit">🍓</div>
   <div class="move-fruit">🍓</div>
@@ -292,10 +289,10 @@ let board = [];
 let draggedCell = null;
 let isDragging = false;
 let isAnimating = false;
+
 // === INICIALIZAR JUEGO ===
 function initGame() {
-  updateScoreDisplay(score);
-  document.getElementById('objective-text').textContent = `Objetivo: ${target}`;
+  updateScoreDisplay(score);  document.getElementById('objective-text').textContent = `Objetivo: ${target}`;
   document.getElementById('level-info').textContent = 
     `Nivel 1 | Mundo: RAÍZ | Tablero: ${boardSize.rows}×${boardSize.cols}`;
 
@@ -341,10 +338,10 @@ function autoClearAllInitialCombos() {
         let left = c - 1;
         while (left >= 0 && board[r][left] === fruit) {
           count++;
-          left--;        }
+          left--;
+        }
         let right = c + 1;
-        while (right < boardSize.cols && board[r][right] === fruit) {
-          count++;
+        while (right < boardSize.cols && board[r][right] === fruit) {          count++;
           right++;
         }
         if (count >= 3) {
@@ -390,10 +387,10 @@ function autoClearAllInitialCombos() {
         const [r, c] = key.split(',').map(Number);
         board[r][c] = '';
       });
-      // Animación      cellsToClear.forEach(key => {
+      // Animación
+      cellsToClear.forEach(key => {
         const [r, c] = key.split(',').map(Number);
-        const idx = r * boardSize.cols + c;
-        const cell = document.getElementById('board').children[idx];
+        const idx = r * boardSize.cols + c;        const cell = document.getElementById('board').children[idx];
         cell.classList.add('matching');
         setTimeout(() => {
           cell.textContent = '';
@@ -440,9 +437,9 @@ function handleTouchStart(e) {
   cell.classList.add('matching');
   cell.style.zIndex = '10';
 }
+
 // === TOUCH MOVE ===
-document.addEventListener('touchmove', function(e) {
-  if (!isDragging || !draggedCell) return;
+document.addEventListener('touchmove', function(e) {  if (!isDragging || !draggedCell) return;
   e.preventDefault();
 
   const touch = e.touches[0];
@@ -489,9 +486,9 @@ document.addEventListener('touchend', function(e) {
   isDragging = false;
   draggedCell = null;
 });
+
 // === SIMULAR INTERCAMBIO ===
-function simulateSwap(r1, c1, r2, c2) {
-  if (isAnimating) return;
+function simulateSwap(r1, c1, r2, c2) {  if (isAnimating) return;
   isAnimating = true;
 
   const temp = board[r1][c1];
@@ -537,10 +534,10 @@ function checkForComboAt(r, c) {
   let up = r - 1;
   while (up >= 0 && board[up][c] === fruit) {
     count++;
-    up--;  }
+    up--;
+  }
   let down = r + 1;
-  while (down < boardSize.rows && board[down][c] === fruit) {
-    count++;
+  while (down < boardSize.rows && board[down][c] === fruit) {    count++;
     down++;
   }
   if (count >= 3) return true;
@@ -586,10 +583,10 @@ function processCombos() {
 
   if (cellsToClear.size >= 3) {
     let fresasEliminadas = 0;
-    cellsToClear.forEach(key => {      const [r, c] = key.split(',').map(Number);
+    cellsToClear.forEach(key => {
+      const [r, c] = key.split(',').map(Number);
       if (board[r][c] === '🍓') fresasEliminadas++;
     });
-
     cellsToClear.forEach(key => {
       const [r, c] = key.split(',').map(Number);
       board[r][c] = '';
@@ -625,7 +622,7 @@ function processCombos() {
   }
 }
 
-// === CAÍDA DE FRUTAS — CORREGIDA (rellena los espacios al instante) ===
+// === CAÍDA DE FRUTAS ===
 function dropFruits() {
   const boardEl = document.getElementById('board');
 
@@ -635,17 +632,16 @@ function dropFruits() {
       if (board[r][c] !== '') {
         if (writeRow !== r) {
           board[writeRow][c] = board[r][c];
-          board[r][c] = '';        }
+          board[r][c] = '';
+        }
         writeRow--;
-      }
-    }
+      }    }
     while (writeRow >= 0) {
       board[writeRow][c] = FRUITS[Math.floor(Math.random() * FRUITS.length)];
       writeRow--;
     }
   }
 
-  // ✅ ACTUALIZAR EL DOM AL INSTANTE (esto evita los espacios vacíos)
   for (let r = 0; r < boardSize.rows; r++) {
     for (let c = 0; c < boardSize.cols; c++) {
       const idx = r * boardSize.cols + c;
@@ -684,15 +680,10 @@ function useMove() {
   }
 }
 
-// === INICIAR ===document.addEventListener('DOMContentLoaded', function() {
-  try {
-    initGame();
-  } catch (e) {
-    console.error('Error al iniciar:', e);
-    alert('Error: ' + e.message + '. Recarga la página.');
-  }
+// === INICIAR ===
+window.addEventListener('load', () => {
+  setTimeout(initGame, 300);
 });
 </script>
-
 </body>
 </html>
